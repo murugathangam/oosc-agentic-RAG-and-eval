@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study Copilot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* Dark, muted 'deep slate' study palette — easy on the eyes at night,
+       warm-neutral rather than harsh pure black. Text is a soft off-white
+       for strong but comfortable contrast (never #fff on #000 glare). */
+    --bg:#1a1f24;
+    --bg-tint:#20262d;
+    --surface:#242b32;
+    --surface-2:#2b333b;
+    --ink:#e8ecef;
+    --ink-soft:#a3adb5;
+    --rule:#333d46;
+    --accent:#57c9a6;
+    --accent-deep:#7fd8bb;
+    --accent-soft:#1f3a33;
+    --violet:#a996f0;
+    --violet-soft:#2d2a45;
+    --ok:#4cc98a;
+    --ok-soft:#1c3a2c;
+    --warn:#e0b25a;
+    --warn-soft:#3a3120;
+    --bad:#f0857a;
+    --bad-soft:#3d2724;
+    --mono: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
+    --serif: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+    --display: 'Fraunces', 'Source Serif 4', Georgia, serif;
+  }
+  *{box-sizing:border-box;}
+  html{ scroll-behavior:smooth; }
+  body{
+    margin:0;
+    background: linear-gradient(180deg, var(--bg-tint), var(--bg) 45%);
+    background-attachment: fixed;
+    color:var(--ink);
+    font-family: var(--serif);
+    font-size: 16px;
+    line-height:1.5;
+    min-height:100vh;
+    animation: bodyIn 0.6s cubic-bezier(.2,.8,.2,1);
+    -webkit-font-smoothing: antialiased;
+  }
+  @keyframes bodyIn{ from{ opacity:0; } to{ opacity:1; } }
+  .wrap{
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2.6rem 1.6rem 6rem;
+  }
+  header{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    padding-bottom: 1.1rem;
+    margin-bottom: 1.9rem;
+    flex-wrap:wrap;
+    gap:0.5rem;
+    position:relative;
+  }
+  header::after{
+    content:"";
+    position:absolute;
+    left:0; right:0; bottom:0;
+    height:3px;
+    background: linear-gradient(90deg, var(--accent), var(--violet) 55%, transparent);
+    border-radius:3px;
+    transform-origin:left;
+    animation: growLine 0.7s cubic-bezier(.2,.8,.2,1) 0.1s both;
+  }
+  @keyframes growLine{ from{ transform:scaleX(0);} to{ transform:scaleX(1);} }
+  header h1{
+    font-family: var(--display);
+    font-size: 2.15rem;
+    font-weight:600;
+    margin:0;
+    letter-spacing:-0.01em;
+    color: var(--accent-deep);
+  }
+  header .tag{
+    font-family: var(--mono);
+    font-size:0.75rem;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    background: var(--accent-soft);
+    padding: 0.3rem 0.6rem;
+    border-radius: 20px;
+  }
+
+  .panel{
+    background: var(--surface);
+    border:1px solid var(--rule);
+    border-radius: 16px;
+    padding: 1.8rem 1.9rem;
+    margin-bottom: 1.6rem;
+    box-shadow: 0 2px 20px -12px rgba(0,0,0,0.6);
+    transition: box-shadow 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
+    animation: panelIn 0.55s cubic-bezier(.2,.8,.2,1) both;
+  }
+  .panel:hover{
+    box-shadow: 0 10px 34px -16px rgba(0,0,0,0.7);
+    border-color: color-mix(in srgb, var(--accent) 30%, var(--rule));
+  }
+  .panel:nth-of-type(1){ animation-delay: 0.02s; }
+  .panel:nth-of-type(2){ animation-delay: 0.08s; }
+  .panel:nth-of-type(3){ animation-delay: 0.14s; }
+  @keyframes panelIn{ 0%{ opacity:0; transform: translateY(12px) scale(0.995);} 100%{ opacity:1; transform:none; } }
+  .panel h2{
+    font-family: var(--display);
+    font-size:1.05rem;
+    font-weight:600;
+    text-transform:none;
+    letter-spacing:0;
+    color: var(--accent-deep);
+    margin: 0 0 1rem;
+    display:flex;
+    align-items:center;
+    gap:0.5rem;
+  }
+  label{
+    display:block;
+    font-family: var(--mono);
+    font-size:0.72rem;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color: var(--ink-soft);
+    margin-bottom:0.4rem;
+  }
+  textarea, input[type=text]{
+    width:100%;
+    font-family: var(--serif);
+    font-size:1rem;
+    padding:0.7rem 0.85rem;
+    border:1.5px solid var(--rule);
+    border-radius:10px;
+    background:var(--bg-tint);
+    color:var(--ink);
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+  }
+  textarea:focus, input[type=text]:focus, select:focus{
+    outline:none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+    background: var(--surface);
+  }
+  textarea{ min-height:120px; resize:vertical; line-height:1.55; }
+  .row{ display:flex; gap:1rem; flex-wrap:wrap; margin-top:1rem; align-items:flex-end;}
+  .row > div{flex:1; min-width:180px;}
+  .field-source{max-width:240px;}
+
+  /* ---- Beautiful custom file upload (drag-drop styled dropzone) ---- */
+  input[type=file]{
+    position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+    overflow:hidden; clip:rect(0,0,0,0); border:0;
+  }
+  .file-drop{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:0.5rem;
+    width:100%;
+    padding:1.5rem 1rem;
+    border:2px dashed var(--rule);
+    border-radius:14px;
+    background:var(--bg-tint);
+    color:var(--ink-soft);
+    cursor:pointer;
+    text-align:center;
+    transition: border-color 0.2s ease, background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+  }
+  .file-drop:hover{
+    border-color:var(--accent);
+    background:var(--accent-soft);
+    color:var(--ink);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px -14px var(--accent);
+  }
+  .file-drop.dragover{
+    border-color:var(--accent);
+    background:var(--accent-soft);
+    color:var(--ink);
+    border-style:solid;
+    transform: scale(1.01);
+  }
+  .file-drop .fd-icon{
+    font-size:1.6rem;
+    line-height:1;
+    transition: transform 0.25s ease;
+  }
+  .file-drop:hover .fd-icon{ transform: translateY(-2px) scale(1.08); }
+  .file-drop .fd-main{ font-family:var(--serif); font-size:0.98rem; color:var(--ink); }
+  .file-drop .fd-sub{ font-family:var(--mono); font-size:0.7rem; letter-spacing:0.04em; opacity:0.75; }
+  .file-drop.has-file{ border-style:solid; border-color:var(--accent); background:var(--accent-soft); color:var(--ink); }
+
+  /* ---- Custom-styled difficulty dropdown ---- */
+  select{
+    width:100%;
+    font-family: var(--mono);
+    font-size:0.82rem;
+    letter-spacing:0.02em;
+    padding:0.7rem 2.2rem 0.7rem 0.9rem;
+    border:1.5px solid var(--rule);
+    border-radius:10px;
+    background-color:var(--bg-tint);
+    color:var(--ink);
+    cursor:pointer;
+    appearance:none; -webkit-appearance:none; -moz-appearance:none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2357c9a6' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat:no-repeat;
+    background-position: right 0.85rem center;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+  }
+  select:hover{ border-color:var(--accent); background-color:var(--surface); }
+  select option{ background:var(--surface); color:var(--ink); }
+
+
+  button{
+    font-family: var(--mono);
+    font-size:0.78rem;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    border:none;
+    background: var(--accent);
+    color: #10201a;
+    font-weight:600;
+    padding:0.72rem 1.35rem;
+    border-radius:11px;
+    cursor:pointer;
+    transition: transform 0.14s cubic-bezier(.2,.8,.2,1), background 0.18s ease, box-shadow 0.2s ease, filter 0.18s ease;
+    box-shadow: 0 2px 10px -4px var(--accent);
+  }
+  button:hover{ filter:brightness(1.08); transform: translateY(-2px); box-shadow: 0 10px 22px -8px var(--accent);}
+  button:active{ transform: translateY(0px) scale(0.98); }
+  button.secondary{
+    background: var(--surface);
+    color:var(--ink-soft);
+    border:1.5px solid var(--rule);
+    box-shadow:none;
+  }
+  button.secondary:hover{ background:var(--accent-soft); color:var(--accent-deep); border-color: var(--accent);}
+  button:disabled{ opacity:0.45; cursor:not-allowed; transform:none; }
+
+  .status{
+    font-family:var(--mono);
+    font-size:0.78rem;
+    margin-top:0.7rem;
+    color:var(--ink-soft);
+    min-height:1em;
+    transition: color 0.2s ease;
+  }
+  .status.ok{ color:var(--ok); }
+  .status.bad{ color:var(--bad); }
+
+  #thread{ display:flex; flex-direction:column; gap:1.7rem; }
+
+  .qa{ animation: rise 0.35s cubic-bezier(.2,.8,.2,1); }
+  @keyframes rise{ 0%{opacity:0; transform:translateY(14px) scale(0.99);} 100%{opacity:1; transform:none;} }
+
+  .question{
+    font-family:var(--mono);
+    font-size:0.87rem;
+    color:var(--violet);
+    padding-left:1rem;
+    border-left:3px solid var(--violet);
+    margin-bottom:0.8rem;
+    line-height:1.5;
+  }
+  .question::before{ content:"Q — "; opacity:0.55;}
+
+  .answer-card{
+    background:var(--surface);
+    border:1px solid var(--rule);
+    border-radius:16px;
+    padding:1.7rem 1.8rem;
+    position:relative;
+    box-shadow: 0 4px 24px -14px rgba(0,0,0,0.6);
+    transition: box-shadow 0.3s ease;
+  }
+  .answer-card:hover{ box-shadow: 0 10px 34px -16px rgba(0,0,0,0.7); }
+  .badges{ display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:0.95rem; }
+  .badge{
+    font-family:var(--mono);
+    font-size:0.68rem;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    padding:0.28rem 0.65rem;
+    border-radius:20px;
+    display:inline-block;
+    animation: pop 0.3s ease both;
+  }
+  @keyframes pop{ from{ transform:scale(0.85); opacity:0;} to{ transform:scale(1); opacity:1;} }
+  .badge.notes{ color:var(--accent-deep); background: var(--accent-soft); }
+  .badge.web{ color:var(--warn); background:var(--warn-soft); }
+  .badge.diff{ color:var(--ink-soft); background: var(--bg); border:1px solid var(--rule); }
+
+  .answer-text{ font-size:1.06rem; line-height:1.7; white-space:pre-wrap; }
+  .answer-text .cite{
+    font-family:var(--mono);
+    font-size:0.78em;
+    color:var(--accent-deep);
+    background:var(--accent-soft);
+    padding:0.08em 0.4em;
+    border-radius:5px;
+  }
+
+  .margin-note{
+    margin-top:1.2rem;
+    padding: 0.8rem 1rem;
+    border-radius:10px;
+    background: var(--bg);
+    font-family: var(--mono);
+    font-size:0.8rem;
+    line-height:1.55;
+    display:flex;
+    gap:0.6rem;
+    align-items:flex-start;
+    animation: rise 0.4s ease 0.1s both;
+  }
+  .margin-note .mark{ font-size:1.05rem; line-height:1.2; }
+  .margin-note.ok{ color:var(--ok); background: var(--ok-soft); }
+  .margin-note.warn{ color:var(--warn); background: var(--warn-soft); }
+  .margin-note.bad{ color:var(--bad); background: var(--bad-soft); }
+
+  .tip-note{
+    margin-top:0.7rem;
+    padding: 0.75rem 1rem;
+    border-radius:10px;
+    background: var(--violet-soft);
+    border: 1px dashed var(--violet);
+    font-family: var(--serif);
+    font-size:0.88rem;
+    line-height:1.55;
+    color: var(--accent-deep);
+    display:flex;
+    gap:0.6rem;
+    align-items:flex-start;
+    animation: rise 0.4s ease 0.15s both;
+  }
+  .tip-note .mark{ font-size:1rem; line-height:1.3; flex-shrink:0; }
+
+  details{ margin-top:1rem; }
+  summary{
+    cursor:pointer;
+    font-family:var(--mono);
+    font-size:0.73rem;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    color:var(--ink-soft);
+    outline:none;
+    transition: color 0.15s ease;
+  }
+  summary:hover{ color:var(--accent-deep); }
+  .detail-block{
+    margin-top:0.75rem;
+    background:var(--bg);
+    border:1px solid var(--rule);
+    border-radius:8px;
+    padding:0.9rem 1rem;
+    font-family:var(--mono);
+    font-size:0.78rem;
+    line-height:1.65;
+    color:var(--ink-soft);
+    animation: fadeIn 0.25s ease;
+  }
+  @keyframes fadeIn{ from{opacity:0;} to{opacity:1;} }
+  .detail-block .step{ margin-bottom:0.55rem; padding-bottom:0.55rem; border-bottom:1px solid var(--rule); }
+  .detail-block .step:last-child{ border-bottom:none; margin-bottom:0; padding-bottom:0; }
+  .detail-block .flag{ color: var(--bad); font-weight:600; }
+  .detail-block .why{ color: var(--accent-deep); font-style:italic; opacity:0.9; }
+  .metrics-grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap:0.6rem 1.3rem; }
+  .metrics-grid div span{ display:block; color:var(--ink); font-size:0.92rem; font-weight:600; }
+  .mlabel{ display:inline-flex; align-items:center; gap:0.3rem; }
+  .info-ico{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:1.15em; height:1.15em; border-radius:50%;
+    border:1px solid var(--ink-soft); color:var(--ink-soft);
+    font-size:0.68em; font-weight:600; cursor:help;
+    flex-shrink:0;
+    transition: border-color 0.15s ease, color 0.15s ease;
+  }
+  .info-ico:hover{ border-color:var(--accent); color:var(--accent-deep); background:var(--accent-soft); }
+  .plain-summary{
+    font-family: var(--serif);
+    font-size:0.92rem;
+    line-height:1.6;
+    color: var(--accent-deep);
+    background: var(--accent-soft);
+    border-radius:8px;
+    padding:0.8rem 0.95rem;
+    margin-bottom:1rem;
+  }
+
+  .source-list{ list-style:none; margin:0; padding:0; }
+  .source-list li{ padding:0.2rem 0; }
+  .source-list a{ color:var(--accent-deep); }
+
+  .loader{
+    font-family:var(--mono);
+    font-size:0.82rem;
+    color:var(--ink-soft);
+    display:flex;
+    align-items:center;
+    gap:0.6rem;
+  }
+  .loader::before{
+    content:"";
+    width:10px; height:10px;
+    border-radius:50%;
+    background: var(--accent);
+    animation: pulse 1s infinite ease-in-out;
+  }
+  @keyframes pulse{ 0%,100%{opacity:0.25; transform:scale(0.85);} 50%{opacity:1; transform:scale(1);} }
+
+  .tabs{ display:flex; gap:0.5rem; margin-bottom:1.7rem; border-bottom:2px solid var(--rule); }
+  .tabbtn{
+    background:transparent; color:var(--ink-soft); border:none; border-bottom:3px solid transparent;
+    border-radius:0; padding:0.6rem 0.3rem; margin-right:1.2rem; box-shadow:none;
+    font-family: var(--mono); font-size:0.85rem; text-transform:none; letter-spacing:0;
+    transition: color 0.15s ease, border-color 0.2s ease;
+  }
+  .tabbtn:hover{ background:transparent; color:var(--accent-deep); transform:none; }
+  .tabbtn.active{ color:var(--accent-deep); border-bottom-color:var(--accent); font-weight:600; }
+
+  .feedback-row{ display:flex; gap:0.6rem; margin-top:0.9rem; }
+  .fbtn{
+    font-family:var(--mono); font-size:0.72rem; text-transform:uppercase;
+    background:var(--surface); border:1.5px solid var(--rule); color:var(--ink-soft);
+    padding:0.4rem 0.8rem; box-shadow:none; border-radius:8px;
+  }
+  .fbtn:hover{ background:var(--accent-soft); color:var(--accent-deep); border-color:var(--accent); transform:none; }
+  .fbtn.picked-good{ border-color:var(--ok); color:var(--ok); background:var(--ok-soft); }
+  .fbtn.picked-bad{ border-color:var(--bad); color:var(--bad); background:var(--bad-soft); }
+
+  .topic-row{ display:flex; justify-content:space-between; padding:0.4rem 0; border-bottom:1px solid var(--rule); font-size:0.9rem; }
+  .topic-row:last-child{ border-bottom:none; }
+  .topic-row .count{ font-family:var(--mono); color:var(--accent-deep); font-weight:600; }
+
+  .qlog-item{
+    padding:0.65rem 0; border-bottom:1px solid var(--rule);
+    display:flex; justify-content:space-between; gap:1rem; font-size:0.9rem; align-items:center;
+  }
+  .qlog-item:last-child{ border-bottom:none; }
+  .qlog-item .q{ flex:1; }
+  .qlog-item .tags{ font-family:var(--mono); font-size:0.68rem; color:var(--ink-soft); white-space:nowrap; }
+
+  .u-bar{ display:flex; height:24px; border-radius:6px; overflow:hidden; border:1px solid var(--rule); }
+  .u-bar div{ height:100%; transition: width 0.4s ease; }
+  .u-bar .good{ background:var(--ok); }
+  .u-bar .bad{ background:var(--bad); }
+  .u-bar .unrated{ background:var(--rule); }
+  .u-legend{ display:flex; gap:1.3rem; margin-top:0.6rem; font-family:var(--mono); font-size:0.72rem; color:var(--ink-soft); }
+  .u-legend span::before{ content:"\25A0 "; }
+  .u-legend .l-good::before{ color:var(--ok); }
+  .u-legend .l-bad::before{ color:var(--bad); }
+  .u-legend .l-unrated::before{ color:var(--rule); }
+
+  :focus-visible{ outline: 2px solid var(--accent); outline-offset: 2px; border-radius:6px; }
+  ::selection{ background: var(--accent-soft); color: var(--ink); }
+  @media (prefers-reduced-motion: reduce){
+    *{ animation:none !important; transition:none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Study Copilot</h1>
+    <div class="tag">grounded doubt-solving agent</div>
+  </header>
+
+  <div class="tabs">
+    <button id="tabAskBtn" class="tabbtn active">Ask</button>
+    <button id="tabMetricsBtn" class="tabbtn">Student Metrics</button>
+  </div>
+
+  <div id="viewAsk">
+
+  <div class="panel">
+    <h2>01 — Load your notes</h2>
+    <label for="baseUrl">Server address</label>
+    <input type="text" id="baseUrl" value="http://localhost:8000">
+
+    <div class="row" style="margin-top:1rem;">
+      <div>
+        <label for="fileInput">Upload a file (PDF, Word, or .txt)</label>
+        <input type="file" id="fileInput" accept=".pdf,.docx,.txt">
+        <label class="file-drop" id="fileDrop" for="fileInput">
+          <span class="fd-icon">📄</span>
+          <span class="fd-main" id="fileDropMain">Click to choose a file, or drag &amp; drop it here</span>
+          <span class="fd-sub">PDF · Word · TXT</span>
+        </label>
+      </div>
+    </div>
+
+    <div style="margin:0.9rem 0; font-family:var(--mono); font-size:0.72rem; color:var(--ink-soft);">
+      — or —
+    </div>
+
+    <div class="row">
+      <div>
+        <label for="material">Paste text instead</label>
+        <textarea id="material" placeholder="Paste your notes here..."></textarea>
+      </div>
+    </div>
+
+    <div class="row">
+      <button id="uploadBtn">Add to your notes</button>
+    </div>
+    <div class="status" id="uploadStatus"></div>
+  </div>
+
+  <div class="panel">
+    <h2>02 — Ask a question</h2>
+    <div class="row">
+      <div>
+        <label for="question">Question</label>
+        <input type="text" id="question" placeholder="What is electromagnetic induction?">
+      </div>
+      <div class="field-source">
+        <label for="difficulty">Explain like</label>
+        <select id="difficulty">
+          <option value="simple">Beginner</option>
+          <option value="standard" selected>Standard</option>
+          <option value="advanced">Advanced</option>
+        </select>
+      </div>
+      <div>
+        <button id="askBtn">Ask</button>
+      </div>
+    </div>
+    <div class="status" id="askStatus"></div>
+    <div class="row" style="margin-top:0.6rem;">
+      <button id="clearConvoBtn" class="secondary">Clear conversation (last 5 kept)</button>
+      <button id="clearDocsBtn" class="secondary">Clear uploaded notes</button>
+    </div>
+  </div>
+
+  <div id="thread"></div>
+
+  </div>
+
+  <div id="viewMetrics" style="display:none;">
+    <div class="panel">
+      <h2>Your study session — this device only</h2>
+      <p style="font-family:var(--mono); font-size:0.75rem; color:var(--ink-soft); margin-top:-0.4rem;">
+        This is engagement &amp; topic analytics from your own questions in this browser — not a graded ability score.
+        Nothing here is sent anywhere or seen by a teacher.
+      </p>
+      <div id="metricsSummary" class="metrics-grid" style="margin-top:1rem;"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Topics you keep asking about</h2>
+      <div id="topicBreakdown" class="detail-block" style="font-family:var(--serif); font-size:0.9rem;"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Self-reported understanding</h2>
+      <div id="understandingBar"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Question log</h2>
+      <div id="questionLog"></div>
+    </div>
+
+    <div class="panel">
+      <button id="clearHistoryBtn" class="secondary">Clear this device's history</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script>
+if (window['pdfjsLib']) {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
+
+const $ = (id) => document.getElementById(id);
+
+function baseUrl(){ return $('baseUrl').value.replace(/\/$/, ''); }
+
+// ---------------------------------------------------------------------
+// TABS
+// ---------------------------------------------------------------------
+$('tabAskBtn').addEventListener('click', () => switchTab('ask'));
+$('tabMetricsBtn').addEventListener('click', () => switchTab('metrics'));
+
+function switchTab(which){
+  $('viewAsk').style.display = which === 'ask' ? '' : 'none';
+  $('viewMetrics').style.display = which === 'metrics' ? '' : 'none';
+  $('tabAskBtn').classList.toggle('active', which === 'ask');
+  $('tabMetricsBtn').classList.toggle('active', which === 'metrics');
+  if(which === 'metrics') renderMetricsTab();
+}
+
+// ---------------------------------------------------------------------
+// LOCAL STUDENT HISTORY — client-side only, this browser/device only.
+// Not sent anywhere. Not a validated ability score — just engagement
+// and topic-frequency analytics built from the student's own session.
+// ---------------------------------------------------------------------
+const HISTORY_KEY = 'studyCopilotHistory';
+
+function loadHistory(){
+  try{ return JSON.parse(localStorage.getItem(HISTORY_KEY)) || []; }
+  catch(e){ return []; }
+}
+function saveHistory(hist){
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(hist));
+}
+function addHistoryEntry(entry){
+  const hist = loadHistory();
+  hist.push(entry);
+  saveHistory(hist);
+  return hist.length - 1; // index of the new entry
+}
+function updateHistoryFeedback(index, feedback){
+  const hist = loadHistory();
+  if(hist[index]) hist[index].feedback = feedback;
+  saveHistory(hist);
+}
+
+$('clearHistoryBtn').addEventListener('click', () => {
+  if(confirm('Clear all locally stored question history on this device?')){
+    localStorage.removeItem(HISTORY_KEY);
+    renderMetricsTab();
+  }
+});
+
+function renderMetricsTab(){
+  const hist = loadHistory();
+
+  const total = hist.length;
+  const webCount = hist.filter(h => h.source === 'web').length;
+  const notesCount = total - webCount;
+  const withScore = hist.filter(h => typeof h.faithfulness_score === 'number');
+  const avgScore = withScore.length
+    ? (withScore.reduce((a,h) => a + h.faithfulness_score, 0) / withScore.length).toFixed(1)
+    : '—';
+  const diffCounts = { simple:0, standard:0, advanced:0 };
+  hist.forEach(h => { if(diffCounts[h.difficulty] !== undefined) diffCounts[h.difficulty]++; });
+
+  $('metricsSummary').innerHTML = `
+    <div>questions asked<span>${total}</span></div>
+    <div>from your notes<span>${notesCount}</span></div>
+    <div>needed web search<span>${webCount}</span></div>
+    <div>avg faithfulness<span>${avgScore}</span></div>
+    <div>beginner-level asks<span>${diffCounts.simple}</span></div>
+    <div>advanced-level asks<span>${diffCounts.advanced}</span></div>
+  `;
+
+  // topic breakdown — which sources/chunks came up most, signals what's
+  // being revisited often (a proxy for "still unsure about this topic")
+  const topicCounts = {};
+  hist.forEach(h => {
+    (h.sources_used || []).forEach(s => {
+      const key = s.source || 'unknown';
+      topicCounts[key] = (topicCounts[key] || 0) + 1;
+    });
+    if(h.source === 'web') topicCounts['(outside your notes)'] = (topicCounts['(outside your notes)'] || 0) + 1;
+  });
+  const topicEntries = Object.entries(topicCounts).sort((a,b) => b[1]-a[1]);
+  $('topicBreakdown').innerHTML = topicEntries.length
+    ? topicEntries.map(([name,count]) => `<div class="topic-row"><span>${escapeHtml(name)}</span><span class="count">${count}x</span></div>`).join('')
+    : '<span style="opacity:0.6; font-family:var(--mono); font-size:0.8rem;">No questions asked yet.</span>';
+
+  // self-reported understanding bar
+  const good = hist.filter(h => h.feedback === 'good').length;
+  const bad = hist.filter(h => h.feedback === 'bad').length;
+  const unrated = total - good - bad;
+  const pct = (n) => total ? (n/total*100) : 0;
+  $('understandingBar').innerHTML = total ? `
+    <div class="u-bar">
+      <div class="good" style="width:${pct(good)}%"></div>
+      <div class="bad" style="width:${pct(bad)}%"></div>
+      <div class="unrated" style="width:${pct(unrated)}%"></div>
+    </div>
+    <div class="u-legend">
+      <span class="l-good">Got it (${good})</span>
+      <span class="l-bad">Still confused (${bad})</span>
+      <span class="l-unrated">Not rated (${unrated})</span>
+    </div>` : `<span style="opacity:0.6; font-family:var(--mono); font-size:0.8rem;">No feedback yet — rate answers as you go.</span>`;
+
+  // question log, most recent first
+  $('questionLog').innerHTML = hist.length ? hist.slice().reverse().map(h => `
+    <div class="qlog-item">
+      <span class="q">${escapeHtml(h.question)}</span>
+      <span class="tags">${h.source}${h.feedback ? ' · ' + h.feedback : ''}</span>
+    </div>`).join('') : '<span style="opacity:0.6; font-family:var(--mono); font-size:0.8rem;">Nothing logged yet.</span>';
+}
+
+// ---- File dropzone: drag-drop + show chosen filename ----
+(function(){
+  const drop = $('fileDrop');
+  const input = $('fileInput');
+  const main = $('fileDropMain');
+  if(!drop || !input) return;
+
+  function showFile(){
+    if(input.files && input.files[0]){
+      main.textContent = input.files[0].name;
+      drop.classList.add('has-file');
+    }else{
+      main.innerHTML = 'Click to choose a file, or drag &amp; drop it here';
+      drop.classList.remove('has-file');
+    }
+  }
+  input.addEventListener('change', showFile);
+
+  ['dragenter','dragover'].forEach(ev =>
+    drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('dragover'); }));
+  ['dragleave','drop'].forEach(ev =>
+    drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('dragover'); }));
+  drop.addEventListener('drop', e => {
+    if(e.dataTransfer.files && e.dataTransfer.files[0]){
+      input.files = e.dataTransfer.files;
+      showFile();
+    }
+  });
+})();
+
+$('uploadBtn').addEventListener('click', async () => {
+  const file = $('fileInput').files[0];
+  const pasted = $('material').value.trim();
+
+  if(!file && !pasted){
+    setStatus('uploadStatus', 'Choose a file or paste some text first.', 'bad');
+    return;
+  }
+
+  $('uploadBtn').disabled = true;
+  setStatus('uploadStatus', file ? `Reading ${file.name}...` : 'Preparing text...', '');
+
+  try{
+    let text, sourceName;
+
+    if(file){
+      text = await extractTextFromFile(file);
+      sourceName = file.name.replace(/\.[^/.]+$/, '');
+    }else{
+      text = pasted;
+      sourceName = `pasted_${Date.now()}`;
+    }
+
+    if(!text || !text.trim()){
+      throw new Error('No readable text found in that file.');
+    }
+
+    setStatus('uploadStatus', 'Chunking and storing...', '');
+
+    const res = await fetch(`${baseUrl()}/chunk1`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        material: text,
+        chunk_size: 200,
+        overlap: 50,
+        source_name: sourceName
+      })
+    });
+    const data = await res.json();
+    if(!res.ok) throw new Error(JSON.stringify(data));
+
+    setStatus('uploadStatus', `Stored ${data.num_chunks} chunks from "${sourceName}". Ready to answer questions.`, 'ok');
+    $('fileInput').value = '';
+    const fd = $('fileDrop'); if(fd){ fd.classList.remove('has-file'); $('fileDropMain').innerHTML = 'Click to choose a file, or drag &amp; drop it here'; }
+    $('material').value = '';
+  }catch(err){
+    setStatus('uploadStatus', `Failed: ${err.message}. If this is a CORS/network error, check your server address and that CORSMiddleware is enabled.`, 'bad');
+  }finally{
+    $('uploadBtn').disabled = false;
+  }
+});
+
+async function extractTextFromFile(file){
+  const ext = file.name.split('.').pop().toLowerCase();
+
+  if(ext === 'txt'){
+    return await file.text();
+  }
+
+  if(ext === 'pdf'){
+    if(!window['pdfjsLib']) throw new Error('PDF reader library did not load — check your internet connection.');
+    const buf = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+    let text = '';
+    for(let i = 1; i <= pdf.numPages; i++){
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      text += content.items.map(it => it.str).join(' ') + '\n';
+    }
+    return text;
+  }
+
+  if(ext === 'docx'){
+    if(!window['mammoth']) throw new Error('Word reader library did not load — check your internet connection.');
+    const buf = await file.arrayBuffer();
+    const result = await mammoth.extractRawText({ arrayBuffer: buf });
+    return result.value;
+  }
+
+  throw new Error(`Unsupported file type: .${ext}. Use PDF, DOCX, or TXT.`);
+}
+
+$('askBtn').addEventListener('click', ask);
+$('question').addEventListener('keydown', (e) => { if(e.key === 'Enter') ask(); });
+
+$('clearConvoBtn').addEventListener('click', async () => {
+  try{
+    await fetch(`${baseUrl()}/clear_history`, { method:'POST' });
+    setStatus('askStatus', 'Conversation memory cleared (thread below is untouched).', 'ok');
+  }catch(err){
+    setStatus('askStatus', `Failed to clear conversation: ${err.message}`, 'bad');
+  }
+});
+
+$('clearDocsBtn').addEventListener('click', async () => {
+  if(!confirm('This deletes all uploaded notes from the server. Continue?')) return;
+  try{
+    await fetch(`${baseUrl()}/clear_documents`, { method:'POST' });
+    setStatus('askStatus', 'All uploaded notes cleared. Upload new material before asking questions.', 'ok');
+  }catch(err){
+    setStatus('askStatus', `Failed to clear notes: ${err.message}`, 'bad');
+  }
+});
+
+async function ask(){
+  const question = $('question').value.trim();
+  if(!question){ setStatus('askStatus', 'Type a question first.', 'bad'); return; }
+  const difficulty = $('difficulty').value;
+
+  $('askBtn').disabled = true;
+  setStatus('askStatus', '', '');
+
+  const thread = $('thread');
+  const qa = document.createElement('div');
+  qa.className = 'qa';
+  qa.innerHTML = `
+    <div class="question">${escapeHtml(question)}</div>
+    <div class="answer-card"><div class="loader">thinking — searching notes</div></div>
+  `;
+  thread.prepend(qa);
+  const card = qa.querySelector('.answer-card');
+
+  try{
+    const res = await fetch(`${baseUrl()}/agent_chat`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ message: question, difficulty })
+    });
+    const data = await res.json();
+    if(!res.ok) throw new Error(JSON.stringify(data));
+
+    const historyIndex = addHistoryEntry({
+      question,
+      difficulty,
+      source: data.source,
+      faithfulness_score: data.faithfulness?.score ?? null,
+      sources_used: data.sources_used || [],
+      feedback: null,
+      timestamp: Date.now(),
+    });
+
+    renderAnswer(card, data, historyIndex, question);
+  }catch(err){
+    card.innerHTML = `<div class="status bad">Request failed: ${escapeHtml(err.message)}. If this is a CORS error, add CORSMiddleware to your FastAPI app.</div>`;
+  }finally{
+    $('askBtn').disabled = false;
+  }
+}
+
+const METRIC_EXPLANATIONS = {
+  total_steps: "Why it matters: shows how much digging the AI did before answering. Typical range: 1–3 for a straightforward question, 4–6 for a harder or multi-part one. There's no fixed 'good' number — more steps means more digging, not a problem by itself.",
+  unnecessary_steps: "Why it matters: flags wasted effort. Scale: 0 and up. 0 is ideal — every search found something new. 1 or more means at least one search came back empty-handed.",
+  loop_detected: "Why it matters: catches the AI getting stuck. Scale: yes or no. 'No' is what you want — it means every search made genuine progress instead of repeating an earlier one almost word-for-word.",
+  drift_compounded: "Why it matters: checks the AI stayed on-topic across its searches. Scale: about -1 to 1. A value at or below 0 is ideal — it means the search stayed locked on (or even tightened toward) your original question. 0.1–0.3 is normal for a broader question. Above 0.3 suggests it wandered from what you actually asked. Negative just means it ended even closer to your question than it started — a good sign.",
+  avg_retrieval_distance: "Why it matters: shows how close a match your notes actually had. Scale: roughly 0 to 1.5+. Under 0.5 is a strong match. 0.5–0.9 is a reasonable match. Above 0.9 means it struggled to find closely related material in your notes.",
+  efficiency_score: "Why it matters: one summary number for the whole search. Scale: 0 to 1. 1 is the best possible score — no wasted steps, no loops. Meaningfully below 1 signals real inefficiency worth noticing."
+};
+
+const FAITHFULNESS_SCALE = "Why it matters: checks the AI didn't make things up. Scale: 0 to 10. 8–10 means the answer is well-grounded in what was actually found. 5–7 means partially grounded — some parts may go beyond the source. Below 5 means the answer isn't well-supported by what was retrieved.";
+
+function buildPlainSummary(source, m){
+  if(source === 'web'){
+    return "Your notes didn't have enough information to answer this confidently, so the AI searched the web instead of guessing. Check the sites it used below.";
+  }
+  if(!m || !m.total_steps){
+    return "The AI answered directly without needing to search your notes further.";
+  }
+  const bits = [];
+  bits.push(`it searched your notes ${m.total_steps} time${m.total_steps === 1 ? '' : 's'} before answering`);
+  bits.push(m.unnecessary_steps === 0
+    ? "every search turned up something useful"
+    : `${m.unnecessary_steps} search${m.unnecessary_steps === 1 ? '' : 'es'} didn't find anything new`);
+  bits.push(m.loop_detected ? "though it did repeat itself at one point" : "it never got stuck repeating itself");
+  if(typeof m.drift_compounded === 'number' && m.drift_compounded <= 0){
+    bits.push("and it actually tightened its focus toward your original question by the end");
+  } else if(typeof m.drift_compounded === 'number' && m.drift_compounded < 0.1){
+    bits.push("and it stayed closely focused on your original question the whole time");
+  }
+  return `This is proof the AI didn't just guess — ${bits.join(', ')}.`;
+}
+
+function ordinal(n){
+  return ['First','Then','Next','After that','Finally','Also'][n-1] || `Step ${n}`;
+}
+
+// ---------------------------------------------------------------------
+// PROMPT COACHING TIP — computed entirely from data already returned
+// by /agent_chat (metrics, trajectory, source). No extra AI call is
+// made for this: generating a tip via another LLM request would burn
+// more tokens than it saves, which defeats the point. Instead this is
+// plain rule-based logic in the browser, reading signals that are
+// already free: how many searches it took, how close the matches
+// were, whether the search drifted or repeated itself.
+// ---------------------------------------------------------------------
+function buildPromptTip(question, source, m, trajectory){
+  if(source === 'web'){
+    return "Your notes didn't cover this — if you know a keyword or term your notes use for a related idea, try that first before asking something this specific. It'll search your notes (fast, free) before falling back to the web (slower, costs more).";
+  }
+  if(!m || m.total_steps === 0){
+    return "It answered directly without needing to search — this kind of direct, well-scoped question is the cheapest and fastest to answer.";
+  }
+  if(m.total_steps === 1 && m.avg_retrieval_distance < 0.5){
+    return "This was a great question to ask — specific enough that it found a strong match in one search. Questions phrased like this (naming the exact concept) are the most efficient.";
+  }
+  if(m.unnecessary_steps > 0 || m.total_steps >= 3){
+    const words = question.split(/\s+/).filter(w => w.length > 3);
+    const vague = words.length <= 4;
+    if(vague){
+      return "This question was fairly short/general, so it took a few tries to find the right match. Next time, try naming the specific concept or algorithm (e.g. \"Prim's algorithm\" instead of \"the tree algorithm\") — it'll usually find it in one search instead of several.";
+    }
+    return "It took a few searches to zero in on this. If you already know the exact term your notes use for this concept, including it directly in your question can cut this down to a single search.";
+  }
+  if(typeof m.drift_compounded === 'number' && m.drift_compounded > 0.25){
+    return "This question touched on more than one idea, so the search drifted a bit while covering both. Asking about one concept per question (and following up separately) usually keeps each search sharper and cheaper.";
+  }
+  if(m.avg_retrieval_distance > 0.9){
+    return "The matches it found weren't a very close fit — your notes might phrase this differently than your question did. Try matching the wording your notes actually use, if you remember it.";
+  }
+  return "This was answered efficiently — no extra tips needed here.";
+}
+
+function renderAnswer(card, data, historyIndex, question){
+  const sourceBadge = data.source === 'web'
+    ? `<span class="badge web">web search used</span>`
+    : `<span class="badge notes">from your notes</span>`;
+  const diffBadge = `<span class="badge diff">${escapeHtml(data.difficulty || 'standard')}</span>`;
+
+  const answerHtml = escapeHtml(data.answer || '')
+    .replace(/\[Source:[^\]]*\]/g, m => `<span class="cite">${m}</span>`);
+
+  let sourcesHtml = '';
+  if(data.sources_used && data.sources_used.length){
+    sourcesHtml = `<ul class="source-list">${data.sources_used.map(s =>
+      `<li>${escapeHtml(s.source)} — chunk ${s.chunk_index}</li>`).join('')}</ul>`;
+  }
+  if(data.web_sources && data.web_sources.length){
+    sourcesHtml += `<ul class="source-list">${data.web_sources.map(u =>
+      `<li><a href="${escapeHtml(u)}" target="_blank" rel="noopener">${escapeHtml(u)}</a></li>`).join('')}</ul>`;
+  }
+  if(!sourcesHtml){ sourcesHtml = `<span style="opacity:0.6">No sources recorded.</span>`; }
+
+  const m = data.metrics || {};
+  const metricLabel = (key, label) =>
+    `<span class="mlabel">${label}<span class="info-ico" title="${escapeHtml(METRIC_EXPLANATIONS[key] || '')}">?</span></span>`;
+
+  const metricsHtml = `
+    <div class="metrics-grid">
+      <div>${metricLabel('total_steps','steps')}<span>${m.total_steps ?? '—'}</span></div>
+      <div>${metricLabel('unnecessary_steps','unnecessary')}<span>${m.unnecessary_steps ?? '—'}</span></div>
+      <div>${metricLabel('loop_detected','loop detected')}<span>${m.loop_detected ? 'yes' : 'no'}</span></div>
+      <div>${metricLabel('drift_compounded','drift')}<span>${m.drift_compounded !== undefined ? m.drift_compounded.toFixed(3) : '—'}</span></div>
+      <div>${metricLabel('avg_retrieval_distance','avg distance')}<span>${m.avg_retrieval_distance !== undefined ? m.avg_retrieval_distance.toFixed(3) : '—'}</span></div>
+      <div>${metricLabel('efficiency_score','efficiency')}<span>${m.efficiency_score ?? '—'}</span></div>
+    </div>`;
+
+  const trajHtml = (data.trajectory || []).map(s => `
+    <div class="step">
+      <strong>${ordinal(s.step)}</strong>, it searched for: "${escapeHtml(s.query)}"
+      ${s.reason ? `<br><span class="why">why: ${escapeHtml(s.reason)}</span>` : ''}
+      <br><span style="opacity:0.85">match quality: ${s.best_distance?.toFixed?.(3) ?? s.best_distance} (lower = closer match) · found ${s.new_chunks_found} new passage${s.new_chunks_found === 1 ? '' : 's'}</span>
+      ${s.redundant_step ? '<br><span class="flag">↳ this search didn\'t find anything new</span>' : ''}
+      ${s.loop_detected ? '<br><span class="flag">↳ this repeated an earlier search</span>' : ''}
+    </div>`).join('') || '<div class="step">No local retrieval steps were taken.</div>';
+
+  const conf = confidenceStyle(data);
+  const plainSummary = buildPlainSummary(data.source, m);
+  const promptTip = buildPromptTip(question || '', data.source, m, data.trajectory || []);
+
+  card.innerHTML = `
+    <div class="badges">${sourceBadge}${diffBadge}</div>
+    <div class="answer-text">${answerHtml}</div>
+    <div class="margin-note ${conf.cls}">
+      <span class="mark">${conf.mark}</span>
+      <span>${escapeHtml(data.confidence_label || '')}</span>
+    </div>
+    <div class="tip-note">
+      <span class="mark">💡</span>
+      <span><strong>Ask sharper next time:</strong> ${escapeHtml(promptTip)}</span>
+    </div>
+    <details>
+      <summary>Sources used</summary>
+      <div class="detail-block">${sourcesHtml}</div>
+    </details>
+    <details>
+      <summary>Why you can trust this — search process &amp; efficiency</summary>
+      <div class="detail-block">
+        <div class="plain-summary">${escapeHtml(plainSummary)}</div>
+        ${metricsHtml}
+        <div style="margin-top:0.9rem; border-top:1px solid var(--rule); padding-top:0.7rem;">${trajHtml}</div>
+      </div>
+    </details>
+    <details>
+      <summary>Faithfulness verdict <span class="info-ico" title="A second, separate check where the AI compares its own answer against whatever it actually retrieved (from your notes or the web) and judges whether every claim is genuinely supported — not just made up. ${escapeHtml(FAITHFULNESS_SCALE)}">?</span></summary>
+      <div class="detail-block">${escapeHtml(data.faithfulness?.raw_verdict || 'N/A')}</div>
+    </details>
+    <div class="feedback-row">
+      <button class="fbtn" data-fb="good">Got it 👍</button>
+      <button class="fbtn" data-fb="bad">Still confused 👎</button>
+    </div>
+  `;
+
+  card.querySelectorAll('.fbtn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const fb = btn.dataset.fb === 'good' ? 'good' : 'bad';
+      updateHistoryFeedback(historyIndex, fb);
+      card.querySelectorAll('.fbtn').forEach(b => b.classList.remove('picked-good','picked-bad'));
+      btn.classList.add(fb === 'good' ? 'picked-good' : 'picked-bad');
+    });
+  });
+}
+
+function confidenceStyle(data){
+  const score = data.faithfulness?.score;
+  if(data.source === 'web') return { cls:'warn', mark:'⌁' };
+  if(score === null || score === undefined) return { cls:'warn', mark:'?' };
+  if(score >= 8) return { cls:'ok', mark:'✓' };
+  if(score >= 5) return { cls:'warn', mark:'~' };
+  return { cls:'bad', mark:'✗' };
+}
+
+function setStatus(id, msg, cls){
+  const el = $(id);
+  el.textContent = msg;
+  el.className = 'status' + (cls ? ' ' + cls : '');
+}
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+</script>
+</body>
+</html>
