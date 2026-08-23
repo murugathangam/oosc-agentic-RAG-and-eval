@@ -184,4 +184,7 @@ The collection may be empty — upload notes via the UI before asking. If answer
 
 ## Team
 
-[names]
+Mithiran A
+Surya Sanjeev
+G Sai Anirudh
+
