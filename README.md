@@ -180,7 +180,7 @@ The collection may be empty — upload notes via the UI before asking. If answer
 
 ## Demo video
 
-[link]
+https://youtu.be/P7PyPLzbC9A
 
 ## Team
 
