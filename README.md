@@ -92,15 +92,23 @@ The first run downloads the embedding model (~80 MB) once and caches it.
 
 In the Ask tab, upload your notes and click "Add to your notes". Ask a question, pick a difficulty, and expand the "Why you can trust this" panel on any answer to see the search trajectory, metrics, and faithfulness score. The Student Metrics tab aggregates your session.
 
-## The metrics, briefly
+## The metrics, and how each is calculated
 
-- **Steps** — how many searches it ran. High counts hint the notes are thin on that topic.
-- **Unnecessary steps** — searches that returned nothing new.
-- **Loop detected** — whether it repeated an earlier search without progress.
-- **Drift** — how far the search moved from the original question; ≤ 0 means it stayed on target.
-- **Avg distance** — how close the notes matched; high values flag a weak spot in the notes.
-- **Efficiency** — a single 0–1 summary of the above.
-- **Faithfulness (0–10)** — whether the answer is actually backed by what was retrieved.
+All the trajectory metrics are computed in plain Python from the logged search steps — no extra model calls, so they cost nothing. Each search step records the query used, the chunk IDs returned, and the best (lowest) similarity distance.
+
+- **Steps** — a simple count of how many times the agent called `retrieve()`. High counts hint the notes are thin on that topic.
+
+- **Unnecessary steps** — counts steps (after the first) whose returned chunk IDs were all already seen in an earlier step. A step that surfaces no new chunk is wasted effort.
+
+- **Loop detected** — for each search, the query's embedding is compared (cosine similarity) against every earlier step's query embedding. If any pair exceeds 0.95, the agent is flagged as looping — re-asking almost the same thing without progress.
+
+- **Drift** — each step's query embedding is compared to the *original question's* embedding. `drift = (similarity at first step) − (similarity at last step)`. Positive means it wandered off; ≤ 0 means it stayed locked on (or tightened toward) the original question.
+
+- **Avg distance** — the mean of each step's best retrieval distance (from ChromaDB). Lower means the notes closely matched the query; high values flag a weak spot in the notes and are what can trigger the web fallback.
+
+- **Efficiency** — a single 0–1 summary: `1 / (1 + unnecessary_steps + 2·loop_penalty)`. A clean search with no waste and no loops scores 1.0.
+
+- **Faithfulness (0–10)** — the one metric that uses a model: a separate LLM call is given the final answer and the actual retrieved text, and asked to score how well every claim is supported. This is independent of the trajectory metrics, so a bad answer can be traced to either retrieval (trajectory) or generation (faithfulness).
 
 ## Known limitations
 
@@ -128,35 +136,52 @@ Ordered roughly by priority — the first few make the current system provable, 
 - A teacher-facing view aggregating which topics a whole class struggles with.
 - Deploy it as a hosted service (client-server ChromaDB + hosted backend) for a live link.
 
+## Scalability
+
+The design scales along a few axes without a rewrite:
+
+- **Cost stays flat as usage grows** — embeddings run locally via `sentence-transformers`, so indexing more documents adds no API cost; only the generation and faithfulness calls hit an API.
+- **Storage scales independently of the model** — ChromaDB can move from local persistent mode to client-server mode, letting many users or services share one vector store.
+- **The API is stateless per request** (aside from short in-memory chat history), so the FastAPI backend can be horizontally replicated behind a load balancer.
+- **Indexing is a one-time cost per document** — querying an already-indexed knowledge base stays fast and cheap regardless of how large the base grows, since only the top-k relevant chunks are ever retrieved.
+
 ## Security
 
 The API key is read from an environment variable, never hard-coded. `.gitignore` keeps the virtual environment, the vector store, and any `.env` file out of the repo. If a key is ever committed, revoke it at console.groq.com — git history keeps old commits.
 
 ## Troubleshooting
 
-Invalid API Key (401) from Groq The API_KEY environment variable isn't set in the terminal running the server. Set it ($env:API_KEY = "..." on Windows, export API_KEY="..." on macOS/Linux) before starting uvicorn. It only lasts for that terminal session, so a fresh terminal needs it set again. Confirm with echo $env:API_KEY.
+**`Invalid API Key` (401) from Groq**
+The `API_KEY` environment variable isn't set in the terminal running the server. Set it (`$env:API_KEY = "..."` on Windows, `export API_KEY="..."` on macOS/Linux) *before* starting `uvicorn`. It only lasts for that terminal session, so a fresh terminal needs it set again. Confirm with `echo $env:API_KEY`.
 
-Connection refused when the browser calls the API The backend isn't running, or isn't finished starting. Make sure uvicorn main:app is running in a terminal and has printed Application startup complete before using the UI. The first run also downloads the embedding model (~80 MB), so give it a moment.
+**`Connection refused` when the browser calls the API**
+The backend isn't running, or isn't finished starting. Make sure `uvicorn main:app` is running in a terminal and has printed `Application startup complete` before using the UI. The first run also downloads the embedding model (~80 MB), so give it a moment.
 
-model ... does not exist or you do not have access The model name is unavailable on your Groq account/tier. Check the current model IDs at console.groq.com and update MODEL / WEB_MODEL in main.py if a model has been deprecated.
+**`model ... does not exist or you do not have access`**
+The model name is unavailable on your Groq account/tier. Check the current model IDs at console.groq.com and update `MODEL` / `WEB_MODEL` in `main.py` if a model has been deprecated.
 
-does not support citations / unsupported parameter (400) Some Groq models don't accept every request field. Remove the unsupported field from the payload for that model.
+**`does not support citations` / unsupported parameter (400)**
+Some Groq models don't accept every request field. Remove the unsupported field from the payload for that model.
 
-Rate limit (429), "tokens per minute exceeded" The free tier has a per-minute token cap. The backend already retries automatically after the wait Groq specifies. If you hit it often while testing, space out requests or lower MAX_HISTORY_TURNS in main.py.
+**Rate limit (429), "tokens per minute exceeded"**
+The free tier has a per-minute token cap. The backend already retries automatically after the wait Groq specifies. If you hit it often while testing, space out requests or lower `MAX_HISTORY_TURNS` in `main.py`.
 
-Unprocessable Content / JSON decode error on upload The request body wasn't valid JSON — usually from hand-typing JSON with unescaped characters. Use the UI (it builds the request correctly) rather than pasting raw JSON into a tool by hand.
+**`Unprocessable Content` / JSON decode error on upload**
+The request body wasn't valid JSON — usually from hand-typing JSON with unescaped characters. Use the UI (it builds the request correctly) rather than pasting raw JSON into a tool by hand.
 
-CORS / "Failed to fetch" in the browser The frontend and backend are different origins, so the backend must allow cross-origin requests. This is already enabled via CORSMiddleware in main.py; if you removed it, add it back.
+**CORS / "Failed to fetch" in the browser**
+The frontend and backend are different origins, so the backend must allow cross-origin requests. This is already enabled via `CORSMiddleware` in `main.py`; if you removed it, add it back.
 
-UnicodeEncodeError when printing responses in a Windows terminal The terminal's default encoding can't display some characters. This only affects console printing, not the app itself; set the terminal to UTF-8 (chcp 65001) or view output in the UI.
+**`UnicodeEncodeError` when printing responses in a Windows terminal**
+The terminal's default encoding can't display some characters. This only affects console printing, not the app itself; set the terminal to UTF-8 (`chcp 65001`) or view output in the UI.
 
-Empty or irrelevant answers The collection may be empty — upload notes via the UI before asking. If answers are weak, the notes may simply not cover that topic (a high avg distance in the trust panel confirms this), in which case the web fallback takes over.
+**Empty or irrelevant answers**
+The collection may be empty — upload notes via the UI before asking. If answers are weak, the notes may simply not cover that topic (a high `avg distance` in the trust panel confirms this), in which case the web fallback takes over.
 
 ## Demo video
 
 [link]
 
 ## Team
-Mithiran A 
-Surya Sanjeev
-G Sai Anirudh
+
+[names]
