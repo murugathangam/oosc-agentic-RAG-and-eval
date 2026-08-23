@@ -132,10 +132,31 @@ Ordered roughly by priority — the first few make the current system provable, 
 
 The API key is read from an environment variable, never hard-coded. `.gitignore` keeps the virtual environment, the vector store, and any `.env` file out of the repo. If a key is ever committed, revoke it at console.groq.com — git history keeps old commits.
 
+## Troubleshooting
+
+Invalid API Key (401) from Groq The API_KEY environment variable isn't set in the terminal running the server. Set it ($env:API_KEY = "..." on Windows, export API_KEY="..." on macOS/Linux) before starting uvicorn. It only lasts for that terminal session, so a fresh terminal needs it set again. Confirm with echo $env:API_KEY.
+
+Connection refused when the browser calls the API The backend isn't running, or isn't finished starting. Make sure uvicorn main:app is running in a terminal and has printed Application startup complete before using the UI. The first run also downloads the embedding model (~80 MB), so give it a moment.
+
+model ... does not exist or you do not have access The model name is unavailable on your Groq account/tier. Check the current model IDs at console.groq.com and update MODEL / WEB_MODEL in main.py if a model has been deprecated.
+
+does not support citations / unsupported parameter (400) Some Groq models don't accept every request field. Remove the unsupported field from the payload for that model.
+
+Rate limit (429), "tokens per minute exceeded" The free tier has a per-minute token cap. The backend already retries automatically after the wait Groq specifies. If you hit it often while testing, space out requests or lower MAX_HISTORY_TURNS in main.py.
+
+Unprocessable Content / JSON decode error on upload The request body wasn't valid JSON — usually from hand-typing JSON with unescaped characters. Use the UI (it builds the request correctly) rather than pasting raw JSON into a tool by hand.
+
+CORS / "Failed to fetch" in the browser The frontend and backend are different origins, so the backend must allow cross-origin requests. This is already enabled via CORSMiddleware in main.py; if you removed it, add it back.
+
+UnicodeEncodeError when printing responses in a Windows terminal The terminal's default encoding can't display some characters. This only affects console printing, not the app itself; set the terminal to UTF-8 (chcp 65001) or view output in the UI.
+
+Empty or irrelevant answers The collection may be empty — upload notes via the UI before asking. If answers are weak, the notes may simply not cover that topic (a high avg distance in the trust panel confirms this), in which case the web fallback takes over.
+
 ## Demo video
 
 [link]
 
 ## Team
-
-[names]
+Mithiran A 
+Surya Sanjeev
+G Sai Anirudh
