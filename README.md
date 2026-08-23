@@ -1,0 +1,141 @@
+# Study Copilot
+
+An AI study assistant that answers questions from a student's own uploaded notes, and reports how much each answer can be trusted.
+
+Built for **Problem Statement 2 — AI for Equitable Education Access** (Grounded Doubt-Solving Agent track).
+
+The idea is simple: a student without a tutor uploads their notes, asks questions, and gets answers grounded in their own material — with citations, and an honest signal about when an answer might be wrong. The part I spent the most effort on isn't the chatbot; it's the evaluation layer that sits on top of it and tells you *whether to believe the answer*.
+
+## Why this instead of a normal chatbot
+
+A plain chatbot is a bad fit for a student who has no teacher to check its work:
+
+- It answers from generic training knowledge that may not match their syllabus.
+- It hallucinates confidently, and the student can't catch it.
+- It never tells you when an answer is shaky.
+
+Study Copilot answers from the student's *own* notes, cites where each claim came from, and runs its answers through a separate evaluation pass so the student knows when to double-check.
+
+## What it does
+
+- Upload notes as PDF, Word, or plain text — extracted, chunked, and embedded automatically.
+- Answers questions using agentic retrieval: the model decides on its own whether to search, what to search for, and how many times, rather than doing one fixed lookup.
+- Scores the *search process* separately from the *answer* — so you can tell a bad-retrieval failure apart from a hallucination.
+- Cites the exact source passage for every answer.
+- Falls back to web search only when the notes genuinely don't cover the question, and says so, with sources.
+- Adapts explanation depth (beginner / standard / advanced).
+- Remembers recent turns so follow-up questions work.
+- Shows a plain-language trust label and a prompt-improvement tip on every answer.
+- Tracks per-session study metrics (topics revisited, notes-vs-web ratio, self-rated understanding).
+
+## The core idea: evaluate the search, not just the answer
+
+Most RAG systems only ask "was the final answer correct?" That can't tell you *why* an answer was bad. This project measures two things independently:
+
+- **Retrieval quality** — from the search trajectory: how many searches it took, whether any were wasted, whether it looped, and whether it drifted off the original question.
+- **Faithfulness** — a separate model call that checks whether the answer is actually supported by what was retrieved, catching hallucination even when retrieval worked.
+
+Keeping these apart means a weak answer can be traced to its cause: the system either never found the right material (retrieval), or found it and didn't use it honestly (generation). For a student who can't independently verify, knowing *when* to double-check is the whole point.
+
+## Architecture
+
+![Architecture diagram](architecture.png)
+
+## Stack
+
+- FastAPI backend
+- `sentence-transformers` (`all-MiniLM-L6-v2`) for embeddings — runs locally, no cost
+- ChromaDB for vector storage — local and persistent
+- Groq API: `openai/gpt-oss-120b` for retrieval and the faithfulness judge, `groq/compound-mini` for the web fallback
+- Single-file HTML/JS frontend, no build step
+
+## Files
+
+```
+main.py                 backend: ingestion, agentic retrieval, evaluation
+study_copilot_ui.html   frontend
+requirements.txt        dependencies
+.env.example            template for the API key
+.gitignore
+```
+
+## Running it locally
+
+Requires Python 3.10+ and a Groq API key (free at console.groq.com).
+
+```bash
+# 1. clone and enter
+git clone <your-repo-url>
+cd <repo-folder>
+
+# 2. virtual environment
+python -m venv venv
+venv\Scripts\Activate.ps1        # Windows
+# source venv/bin/activate       # macOS / Linux
+
+# 3. dependencies
+pip install -r requirements.txt
+
+# 4. API key (same terminal you run the server in)
+$env:API_KEY = "your_groq_api_key"     # Windows
+# export API_KEY="your_groq_api_key"   # macOS / Linux
+
+# 5. run
+uvicorn main:app
+```
+
+Wait for `Application startup complete`, then open `study_copilot_ui.html` in a browser. It talks to the backend on `http://localhost:8000` — no separate web server needed.
+
+The first run downloads the embedding model (~80 MB) once and caches it.
+
+### Using it
+
+In the Ask tab, upload your notes and click "Add to your notes". Ask a question, pick a difficulty, and expand the "Why you can trust this" panel on any answer to see the search trajectory, metrics, and faithfulness score. The Student Metrics tab aggregates your session.
+
+## The metrics, briefly
+
+- **Steps** — how many searches it ran. High counts hint the notes are thin on that topic.
+- **Unnecessary steps** — searches that returned nothing new.
+- **Loop detected** — whether it repeated an earlier search without progress.
+- **Drift** — how far the search moved from the original question; ≤ 0 means it stayed on target.
+- **Avg distance** — how close the notes matched; high values flag a weak spot in the notes.
+- **Efficiency** — a single 0–1 summary of the above.
+- **Faithfulness (0–10)** — whether the answer is actually backed by what was retrieved.
+
+## Known limitations
+
+- Faithfulness is scored by an LLM judge, not validated against human ratings — standard practice (see RAGAS) but not perfect.
+- There's no labelled test set yet, so the metrics measure search *behaviour*, not correctness against a known answer key.
+- Student metrics are stored per-browser, with no accounts.
+- The efficiency score penalises waste, not step count — a clean 3-step search scores the same as a clean 1-step one.
+
+## Possible next steps
+
+Ordered roughly by priority — the first few make the current system provable, the rest extend it.
+
+**Make it measurable**
+- Build a small labelled test set (questions tagged with the chunks that should be retrieved and a known-good answer) to compute real precision/recall instead of only behavioural metrics.
+- Validate the faithfulness judge against hand-scored answers, to confirm the LLM-as-judge actually agrees with human judgement.
+- Use that test set to tune the web-fallback threshold, which is currently a hardcoded guess.
+
+**Improve retrieval quality**
+- Sentence/paragraph-aware chunking instead of fixed character slicing, measured before/after on the test set.
+- Make the efficiency score account for step count, not just wasted steps.
+- Experiment with fine-tuning the embedding model on domain-specific material.
+
+**Extend the product**
+- User accounts so notes and metrics persist across sessions and devices.
+- A teacher-facing view aggregating which topics a whole class struggles with.
+- Deploy it as a hosted service (client-server ChromaDB + hosted backend) for a live link.
+
+## Security
+
+The API key is read from an environment variable, never hard-coded. `.gitignore` keeps the virtual environment, the vector store, and any `.env` file out of the repo. If a key is ever committed, revoke it at console.groq.com — git history keeps old commits.
+
+## Demo video
+
+[link]
+
+## Team
+
+[names]
